@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RegistrationStatus {
+  pending
+  interviewing
+  approved
+  rejected
+
+  @@map("registration_status")
+}
+
+model GuildSettings {
+  guildId               String   @id @map("guild_id")
+  registrationChannelId String   @map("registration_channel_id")
+  adminChannelId        String   @map("admin_channel_id")
+  interviewChannelId    String   @map("interview_channel_id")
+  memberRoleId          String   @map("member_role_id")
+  adminRoleId           String?  @map("admin_role_id")
+  welcomeMessageId      String?  @map("welcome_message_id")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("guild_settings")
+}
+
+model Registration {
+  id                 String             @id @default(uuid()) @db.Uuid
+  guildId            String             @map("guild_id")
+  discordUserId      String             @map("discord_user_id")
+  discordUsername    String             @map("discord_username")
+  name               String             @db.VarChar(100)
+  robloxUsername     String             @map("roblox_username") @db.VarChar(100)
+  gang               String             @default("-") @db.VarChar(100)
+  joinedAt           DateTime           @map("joined_at") @db.Timestamptz(6)
+  status             RegistrationStatus @default(pending)
+  dashboardMessageId String?            @map("dashboard_message_id")
+  reviewedBy         String?            @map("reviewed_by")
+  reviewedAt         DateTime?          @map("reviewed_at") @db.Timestamptz(6)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([guildId, discordUserId])
+  @@index([guildId, status])
+  @@map("registrations")
+}
