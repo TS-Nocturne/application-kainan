@@ -102,3 +102,26 @@ npm run db:generate
 npm run db:migrate
 npm run db:studio
 ```
+
+## Render และ UptimeRobot
+
+ตัวบอทมี HTTP health endpoint สำหรับใช้งานเป็น Render Web Service แล้ว โดย server
+จะอ่านพอร์ตจาก `PORT` ที่ Render กำหนดให้อัตโนมัติ
+
+ตั้งค่า Render:
+
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start`
+- เพิ่ม environment variables ทั้งหมดจาก `.env.example` ยกเว้น `PORT`
+
+หลัง deploy สำเร็จ เปิด URL ต่อไปนี้เพื่อตรวจสอบ:
+
+```text
+https://YOUR-SERVICE.onrender.com/health
+```
+
+ผลลัพธ์ควรมี `status` เป็น `ok` และ `bot` เป็น `online` เมื่อ Discord bot
+เชื่อมต่อเรียบร้อยแล้ว
+
+ใน UptimeRobot ให้สร้าง HTTP(s) monitor โดยใช้ URL `/health` ด้านบน และตั้ง
+monitoring interval เป็น 14 นาที

@@ -15,6 +15,10 @@ import {
   handleAdminAction,
 } from './handlers/admin.js';
 import { handleRegistrationModal } from './handlers/registration.js';
+import {
+  startHealthServer,
+  stopHealthServer,
+} from './health-server.js';
 import { logger } from './logger.js';
 import { setupCommand, setupGuild } from './setup.js';
 import {
@@ -25,6 +29,7 @@ import {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
+const healthServer = startHealthServer(client);
 
 const rest = new REST({ version: '10' }).setToken(config.discordToken);
 
@@ -144,6 +149,7 @@ process.on('unhandledRejection', (error) => {
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   logger.info(`Received ${signal}; shutting down`);
   client.destroy();
+  await stopHealthServer(healthServer);
   await disconnectDatabase();
   process.exit(0);
 }
