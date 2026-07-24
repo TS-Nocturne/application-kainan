@@ -13,6 +13,7 @@ import type { Registration, RegistrationStatus } from '@prisma/client';
 export const componentIds = Object.freeze({
   openRegistration: 'registration:open',
   registrationModal: 'registration:modal',
+  serverNickname: 'registration:server-nickname',
   name: 'registration:name',
   roblox: 'registration:roblox',
   gang: 'registration:gang',
@@ -51,6 +52,7 @@ export function welcomePayload() {
       [
         'ยินดีต้อนรับ! กรุณากรอกข้อมูลสั้น ๆ เพื่อส่งให้ทีมงานตรวจสอบ',
         '',
+        '• ระบุชื่อที่ต้องการใช้ในเซิร์ฟเวอร์ Discord',
         '• ใช้ชื่อ IC หรือชื่อเล่นที่ต้องการใช้',
         '• กรอก Roblox Username ให้ถูกต้อง',
         '• หากไม่มีสังกัด ให้ใส่ `-`',
@@ -86,6 +88,15 @@ export function registrationModal() {
     .setMaxLength(100)
     .setRequired(true);
 
+  const serverNickname = new TextInputBuilder()
+    .setCustomId(componentIds.serverNickname)
+    .setLabel('ชื่อที่จะใช้ในเซิร์ฟเวอร์ Discord')
+    .setPlaceholder('ชื่อที่ต้องการให้แสดงหลังผ่านการอนุมัติ')
+    .setStyle(TextInputStyle.Short)
+    .setMinLength(1)
+    .setMaxLength(32)
+    .setRequired(true);
+
   const roblox = new TextInputBuilder()
     .setCustomId(componentIds.roblox)
     .setLabel('Roblox — Username ในเกม')
@@ -104,6 +115,7 @@ export function registrationModal() {
     .setRequired(true);
 
   modal.addComponents(
+    new ActionRowBuilder<TextInputBuilder>().addComponents(serverNickname),
     new ActionRowBuilder<TextInputBuilder>().addComponents(name),
     new ActionRowBuilder<TextInputBuilder>().addComponents(roblox),
     new ActionRowBuilder<TextInputBuilder>().addComponents(gang),
@@ -127,6 +139,13 @@ export function dashboardPayload(
       {
         name: 'Name',
         value: escapeMarkdown(registration.name),
+        inline: true,
+      },
+      {
+        name: 'Discord Server Name',
+        value: escapeMarkdown(
+          registration.serverNickname ?? 'ไม่ได้ระบุ (ใบสมัครเดิม)',
+        ),
         inline: true,
       },
       {

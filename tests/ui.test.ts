@@ -16,6 +16,7 @@ test('enables skip only while an applicant is being interviewed', () => {
     guildId: '12345678901234567',
     discordUserId: '12345678901234567',
     discordUsername: 'applicant',
+    serverNickname: 'Kai Discord',
     name: 'Kainan Smith',
     robloxUsername: 'KainanSmith',
     gang: '-',

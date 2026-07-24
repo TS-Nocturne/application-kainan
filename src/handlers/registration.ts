@@ -56,6 +56,7 @@ export async function handleRegistrationModal(
   let form;
   try {
     form = validateRegistrationForm(
+      interaction.fields.getTextInputValue(componentIds.serverNickname),
       interaction.fields.getTextInputValue(componentIds.name),
       interaction.fields.getTextInputValue(componentIds.roblox),
       interaction.fields.getTextInputValue(componentIds.gang),
@@ -72,6 +73,7 @@ export async function handleRegistrationModal(
     guildId: interaction.guildId,
     discordUserId: interaction.user.id,
     discordUsername: interaction.user.username,
+    serverNickname: form.serverNickname,
     name: form.name,
     robloxUsername: form.robloxUsername,
     gang: form.gang,

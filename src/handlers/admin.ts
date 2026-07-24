@@ -198,6 +198,13 @@ async function handleApprove(
     return;
   }
 
+  if (!member.manageable) {
+    await interaction.editReply(
+      '❌ บอทไม่สามารถเปลี่ยนชื่อสมาชิกคนนี้ได้ กรุณาย้าย Role ของบอทให้อยู่สูงกว่าสมาชิก และตรวจสิทธิ์ Manage Nicknames',
+    );
+    return;
+  }
+
   if (
     !memberRole.editable ||
     !interviewRole.editable ||
@@ -222,7 +229,16 @@ async function handleApprove(
   }
 
   const alreadyHadMemberRole = member.roles.cache.has(memberRole.id);
+  const previousNickname = member.nickname;
+  const desiredNickname = (current.serverNickname ?? current.name).slice(0, 32);
+  const nicknameChanged = previousNickname !== desiredNickname;
   try {
+    if (nicknameChanged) {
+      await member.setNickname(
+        desiredNickname,
+        `KAINAN HIGH approval by ${interaction.user.id}`,
+      );
+    }
     if (!alreadyHadMemberRole) {
       await member.roles.add(
         memberRole,
@@ -242,11 +258,17 @@ async function handleApprove(
         'KAINAN HIGH approval rollback',
       ).catch(() => null);
     }
+    if (nicknameChanged) {
+      await member.setNickname(
+        previousNickname,
+        'KAINAN HIGH approval rollback',
+      ).catch(() => null);
+    }
     const restored = await restoreRegistration(updated, current);
     if (restored) await updateDashboard(interaction, restored);
-    logger.error('Cannot grant member role; approval restored', error);
+    logger.error('Cannot change nickname or roles; approval restored', error);
     await interaction.editReply(
-      '❌ เปลี่ยน Role ไม่สำเร็จ ระบบยกเลิกการอนุมัติเพื่อให้ลองใหม่ได้',
+      '❌ เปลี่ยนชื่อหรือ Role ไม่สำเร็จ ระบบยกเลิกการอนุมัติเพื่อให้ลองใหม่ได้',
     );
     return;
   }
@@ -257,7 +279,7 @@ async function handleApprove(
   );
   await updateDashboard(interaction, updated, true);
   await interaction.editReply(
-    '✅ อนุมัติแล้ว: ถอด Role รอสัมภาษณ์และมอบ Citizen เรียบร้อย',
+    '✅ อนุมัติแล้ว: เปลี่ยนชื่อ ถอด Role รอสัมภาษณ์ และมอบ Citizen เรียบร้อย',
   );
 }
 

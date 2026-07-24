@@ -6,7 +6,7 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 ## ความสามารถ
 
 - หน้า Welcome แบบ Embed พร้อมปุ่มเปิด Modal
-- Modal เก็บ Name, Roblox Username และ Gang
+- Modal เก็บชื่อที่ใช้ในเซิร์ฟเวอร์ Discord, Name, Roblox Username และ Gang
 - บันทึกและแสดง `Join Date` จากวันที่สมาชิกเข้า Discord server
 - ดึง Discord ID/Username และกำหนดสถานะให้อัตโนมัติ
 - บันทึกข้อมูลผ่าน Prisma แบบ upsert ลง Supabase PostgreSQL ป้องกันใบสมัครซ้ำ
@@ -17,6 +17,7 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 - แจ้งผู้สมัครในห้องรอสัมภาษณ์และทาง DM
 - มอบ Role `รอสัมภาษณ์` เมื่อทีมงานเรียก และถอดออกเมื่ออนุมัติหรือปฏิเสธ
 - มอบ Role `Citizen` อัตโนมัติเมื่ออนุมัติ พร้อมซ่อนห้องสมัครและห้องรอสัมภาษณ์
+- เปลี่ยนชื่อเล่นในเซิร์ฟเวอร์เป็นชื่อที่ผู้สมัครกำหนดเมื่ออนุมัติ
 - คำสั่ง `/setup` สร้างห้อง Role และโพสต์ Welcome ให้อัตโนมัติ
 
 ## สิ่งที่ต้องมี
@@ -24,7 +25,7 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 - Node.js 20.19 ขึ้นไป
 - Discord Application/Bot
 - Supabase Project
-- สิทธิ์ของบอท: `Manage Channels`, `Manage Roles`, `Send Messages`,
+- สิทธิ์ของบอท: `Manage Channels`, `Manage Roles`, `Manage Nicknames`, `Send Messages`,
   `Read Message History`, `View Channels`
 
 > Role ของบอทต้องอยู่สูงกว่า Role `Citizen` และ `รอสัมภาษณ์` ใน Server Settings

@@ -20,6 +20,7 @@ export interface RegistrationInput {
   guildId: string;
   discordUserId: string;
   discordUsername: string;
+  serverNickname: string;
   name: string;
   robloxUsername: string;
   gang: string;

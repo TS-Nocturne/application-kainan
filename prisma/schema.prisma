@@ -35,6 +35,7 @@ model Registration {
   guildId            String             @map("guild_id")
   discordUserId      String             @map("discord_user_id")
   discordUsername    String             @map("discord_username")
+  serverNickname     String?            @map("server_nickname") @db.VarChar(32)
   name               String             @db.VarChar(100)
   robloxUsername     String             @map("roblox_username") @db.VarChar(100)
   gang               String             @default("-") @db.VarChar(100)
