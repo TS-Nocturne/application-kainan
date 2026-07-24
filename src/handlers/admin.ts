@@ -60,12 +60,38 @@ async function handleInterview(
   settings: GuildSettings,
   current: Registration,
 ): Promise<void> {
+  const member = await interaction.guild.members
+    .fetch(current.discordUserId)
+    .catch(() => null);
+  const interviewRole = settings.interviewRoleId
+    ? await interaction.guild.roles
+        .fetch(settings.interviewRoleId)
+        .catch(() => null)
+    : null;
+  const botMember = interaction.guild.members.me;
   const waitingChannel = await interaction.guild.channels.fetch(
     settings.interviewChannelId,
   );
   if (waitingChannel?.type !== ChannelType.GuildText) {
     await interaction.editReply(
       '❌ ไม่พบห้องรอสัมภาษณ์ กรุณารัน `/setup` อีกครั้ง',
+    );
+    return;
+  }
+
+  if (!member || !interviewRole || !botMember) {
+    await interaction.editReply(
+      '❌ ไม่พบสมาชิกหรือ Role รอสัมภาษณ์ กรุณารัน `/setup` อีกครั้ง',
+    );
+    return;
+  }
+
+  if (
+    !interviewRole.editable ||
+    botMember.roles.highest.comparePositionTo(interviewRole) <= 0
+  ) {
+    await interaction.editReply(
+      '❌ บอทไม่สามารถมอบ Role รอสัมภาษณ์ได้ กรุณาย้าย Role ของบอทให้อยู่สูงกว่า',
     );
     return;
   }
@@ -81,7 +107,14 @@ async function handleInterview(
     return;
   }
 
+  const alreadyHadInterviewRole = member.roles.cache.has(interviewRole.id);
   try {
+    if (!alreadyHadInterviewRole) {
+      await member.roles.add(
+        interviewRole,
+        `KAINAN HIGH interview call by ${interaction.user.id}`,
+      );
+    }
     await waitingChannel.send({
       content: `🗣️ <@${updated.discordUserId}> ทีมงานเรียกสัมภาษณ์แล้ว กรุณารายงานตัวในห้องนี้`,
       allowedMentions: {
@@ -90,11 +123,17 @@ async function handleInterview(
       },
     });
   } catch (error) {
+    if (!alreadyHadInterviewRole) {
+      await member.roles.remove(
+        interviewRole,
+        'KAINAN HIGH interview call rollback',
+      ).catch(() => null);
+    }
     const restored = await restoreRegistration(updated, current);
     if (restored) await updateDashboard(interaction, restored);
     logger.error('Cannot send interview notification; status restored', error);
     await interaction.editReply(
-      '❌ ส่งข้อความเรียกสัมภาษณ์ไม่สำเร็จ สถานะถูกคืนค่าแล้ว',
+      '❌ มอบ Role หรือส่งข้อความเรียกสัมภาษณ์ไม่สำเร็จ สถานะถูกคืนค่าแล้ว',
     );
     return;
   }
@@ -113,6 +152,27 @@ async function handleInterview(
   await interaction.editReply('✅ ส่งข้อความเรียกสัมภาษณ์เรียบร้อย');
 }
 
+async function handleSkip(
+  interaction: ButtonInteraction<'cached'>,
+  current: Registration,
+): Promise<void> {
+  const updated = await transitionRegistration(
+    current.id,
+    ['interviewing'],
+    'pending',
+    interaction.user.id,
+  );
+  if (!updated) {
+    await reportConcurrentUpdate(interaction);
+    return;
+  }
+
+  await updateDashboard(interaction, updated);
+  await interaction.editReply(
+    '⏭️ ข้ามคิวนี้แล้ว สามารถกดเรียกสัมภาษณ์รายการนี้อีกครั้งภายหลังได้',
+  );
+}
+
 async function handleApprove(
   interaction: ButtonInteraction<'cached'>,
   settings: GuildSettings,
@@ -124,18 +184,28 @@ async function handleApprove(
   const memberRole = await interaction.guild.roles
     .fetch(settings.memberRoleId)
     .catch(() => null);
+  const interviewRole = settings.interviewRoleId
+    ? await interaction.guild.roles
+        .fetch(settings.interviewRoleId)
+        .catch(() => null)
+    : null;
   const botMember = interaction.guild.members.me;
 
-  if (!member || !memberRole || !botMember) {
+  if (!member || !memberRole || !interviewRole || !botMember) {
     await interaction.editReply(
       '❌ ไม่พบสมาชิกหรือ Role ที่ตั้งค่าไว้ กรุณารัน `/setup` และลองใหม่',
     );
     return;
   }
 
-  if (!memberRole.editable || botMember.roles.highest.comparePositionTo(memberRole) <= 0) {
+  if (
+    !memberRole.editable ||
+    !interviewRole.editable ||
+    botMember.roles.highest.comparePositionTo(memberRole) <= 0 ||
+    botMember.roles.highest.comparePositionTo(interviewRole) <= 0
+  ) {
     await interaction.editReply(
-      '❌ บอทไม่สามารถมอบ Role นี้ได้ กรุณาย้าย Role ของบอทให้อยู่สูงกว่า Role สมาชิก',
+      '❌ บอทไม่สามารถจัดการ Role ได้ กรุณาย้าย Role ของบอทให้อยู่สูงกว่า Citizen และรอสัมภาษณ์',
     );
     return;
   }
@@ -151,19 +221,32 @@ async function handleApprove(
     return;
   }
 
+  const alreadyHadMemberRole = member.roles.cache.has(memberRole.id);
   try {
-    if (!member.roles.cache.has(memberRole.id)) {
+    if (!alreadyHadMemberRole) {
       await member.roles.add(
         memberRole,
         `KAINAN HIGH approval by ${interaction.user.id}`,
       );
     }
+    if (member.roles.cache.has(interviewRole.id)) {
+      await member.roles.remove(
+        interviewRole,
+        `KAINAN HIGH approval by ${interaction.user.id}`,
+      );
+    }
   } catch (error) {
+    if (!alreadyHadMemberRole) {
+      await member.roles.remove(
+        memberRole,
+        'KAINAN HIGH approval rollback',
+      ).catch(() => null);
+    }
     const restored = await restoreRegistration(updated, current);
     if (restored) await updateDashboard(interaction, restored);
     logger.error('Cannot grant member role; approval restored', error);
     await interaction.editReply(
-      '❌ เพิ่ม Role ไม่สำเร็จ ระบบยกเลิกการอนุมัติเพื่อให้ลองใหม่ได้',
+      '❌ เปลี่ยน Role ไม่สำเร็จ ระบบยกเลิกการอนุมัติเพื่อให้ลองใหม่ได้',
     );
     return;
   }
@@ -173,13 +256,39 @@ async function handleApprove(
     '🎉 ยินดีต้อนรับสู่ KAINAN HIGH! คุณได้รับการอนุมัติแล้ว ขอให้สนุก!',
   );
   await updateDashboard(interaction, updated, true);
-  await interaction.editReply('✅ อนุมัติและมอบ Role เรียบร้อย');
+  await interaction.editReply(
+    '✅ อนุมัติแล้ว: ถอด Role รอสัมภาษณ์และมอบ Citizen เรียบร้อย',
+  );
 }
 
 async function handleReject(
   interaction: ButtonInteraction<'cached'>,
+  settings: GuildSettings,
   current: Registration,
 ): Promise<void> {
+  const member = await interaction.guild.members
+    .fetch(current.discordUserId)
+    .catch(() => null);
+  const interviewRole = settings.interviewRoleId
+    ? await interaction.guild.roles
+        .fetch(settings.interviewRoleId)
+        .catch(() => null)
+    : null;
+  const botMember = interaction.guild.members.me;
+
+  if (
+    member?.roles.cache.has(settings.interviewRoleId ?? '') &&
+    (!interviewRole ||
+      !botMember ||
+      !interviewRole.editable ||
+      botMember.roles.highest.comparePositionTo(interviewRole) <= 0)
+  ) {
+    await interaction.editReply(
+      '❌ บอทไม่สามารถถอด Role รอสัมภาษณ์ได้ กรุณาตรวจลำดับ Role แล้วลองใหม่',
+    );
+    return;
+  }
+
   const updated = await transitionRegistration(
     current.id,
     ['pending', 'interviewing'],
@@ -188,6 +297,23 @@ async function handleReject(
   );
   if (!updated) {
     await reportConcurrentUpdate(interaction);
+    return;
+  }
+
+  try {
+    if (member && interviewRole && member.roles.cache.has(interviewRole.id)) {
+      await member.roles.remove(
+        interviewRole,
+        `KAINAN HIGH rejection by ${interaction.user.id}`,
+      );
+    }
+  } catch (error) {
+    const restored = await restoreRegistration(updated, current);
+    if (restored) await updateDashboard(interaction, restored);
+    logger.error('Cannot remove interview role; rejection restored', error);
+    await interaction.editReply(
+      '❌ ถอด Role รอสัมภาษณ์ไม่สำเร็จ ระบบยกเลิกการปฏิเสธเพื่อให้ลองใหม่ได้',
+    );
     return;
   }
 
@@ -235,11 +361,14 @@ export async function handleAdminAction(
     case 'interview':
       await handleInterview(interaction, settings, current);
       break;
+    case 'skip':
+      await handleSkip(interaction, current);
+      break;
     case 'approve':
       await handleApprove(interaction, settings, current);
       break;
     case 'reject':
-      await handleReject(interaction, current);
+      await handleReject(interaction, settings, current);
       break;
   }
 }

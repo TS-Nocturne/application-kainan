@@ -172,6 +172,12 @@ export function dashboardPayload(
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isFinal || registration.status === 'interviewing'),
     new ButtonBuilder()
+      .setCustomId(`registration:skip:${registration.id}`)
+      .setLabel('ข้ามคิว')
+      .setEmoji('⏭️')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(isFinal || registration.status !== 'interviewing'),
+    new ButtonBuilder()
       .setCustomId(`registration:approve:${registration.id}`)
       .setLabel('อนุมัติ')
       .setEmoji('✅')

@@ -10,12 +10,13 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 - บันทึกและแสดง `Join Date` จากวันที่สมาชิกเข้า Discord server
 - ดึง Discord ID/Username และกำหนดสถานะให้อัตโนมัติ
 - บันทึกข้อมูลผ่าน Prisma แบบ upsert ลง Supabase PostgreSQL ป้องกันใบสมัครซ้ำ
-- Admin Dashboard พร้อมปุ่มเรียกสัมภาษณ์ อนุมัติ และปฏิเสธ
+- Admin Dashboard พร้อมปุ่มเรียกสัมภาษณ์ ข้ามคิว อนุมัติ และปฏิเสธ
 - ตรวจสิทธิ์แอดมินและป้องกันการกดดำเนินการซ้ำ
 - กรอง input/control characters และปิด mention ที่ไม่ได้อนุญาต
 - คืนสถานะอัตโนมัติหากเรียกสัมภาษณ์หรือมอบ Role ไม่สำเร็จ
 - แจ้งผู้สมัครในห้องรอสัมภาษณ์และทาง DM
-- มอบ Role `Citizen` อัตโนมัติเมื่ออนุมัติ
+- มอบ Role `รอสัมภาษณ์` เมื่อทีมงานเรียก และถอดออกเมื่ออนุมัติหรือปฏิเสธ
+- มอบ Role `Citizen` อัตโนมัติเมื่ออนุมัติ พร้อมซ่อนห้องสมัครและห้องรอสัมภาษณ์
 - คำสั่ง `/setup` สร้างห้อง Role และโพสต์ Welcome ให้อัตโนมัติ
 
 ## สิ่งที่ต้องมี
@@ -26,7 +27,8 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 - สิทธิ์ของบอท: `Manage Channels`, `Manage Roles`, `Send Messages`,
   `Read Message History`, `View Channels`
 
-> Role ของบอทต้องอยู่สูงกว่า Role `Citizen` ใน Server Settings จึงจะมอบ Role ได้
+> Role ของบอทต้องอยู่สูงกว่า Role `Citizen` และ `รอสัมภาษณ์` ใน Server Settings
+> จึงจะเพิ่มและถอด Role ได้
 
 ## ติดตั้ง
 
@@ -76,6 +78,7 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 - `#📝ลงทะเบียน-kainan`
 - `#🔊รอสัมภาษณ์`
 - `#💻admin-dashboard` (ห้องส่วนตัว)
+- Role `รอสัมภาษณ์`
 - Role `Citizen`
 
 หากมี Role ทีมงานอยู่แล้ว ให้ใส่ ID ใน `ADMIN_ROLE_ID` ก่อนใช้ `/setup`
@@ -87,9 +90,9 @@ Node.js, discord.js v14, Prisma ORM และ PostgreSQL บน Supabase
 
 ## การเปิดห้องอื่นหลังอนุมัติ
 
-บอทสร้าง Role `Citizen` และมอบให้หลังอนุมัติ แต่สิทธิ์ของห้องเดิมในเซิร์ฟเวอร์
-ต้องตั้งเอง: ปิด `View Channel` สำหรับ `@everyone` และเปิดให้ `Citizen`
-จึงจะเห็นห้องเหล่านั้นหลังผ่านการอนุมัติ
+บอทจะซ่อนห้องลงทะเบียนและห้องรอสัมภาษณ์จาก Role `Citizen` ให้อัตโนมัติเมื่อรัน
+`/setup` ส่วนห้องอื่นของเซิร์ฟเวอร์ยังต้องตั้งเอง: ปิด `View Channel` สำหรับ
+`@everyone` และเปิดให้ `Citizen` จึงจะเห็นห้องเหล่านั้นหลังผ่านการอนุมัติ
 
 ## คำสั่งสำหรับพัฒนา
 

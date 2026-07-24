@@ -64,6 +64,10 @@ export async function setupGuild(guild: Guild) {
   const everyone = guild.roles.everyone;
   const botMember = guild.members.me;
   if (!botMember) throw new Error('Bot member is not available in the guild');
+  const adminRole = await fetchRole(
+    guild,
+    config.adminRoleId ?? saved?.adminRoleId,
+  );
 
   let memberRole = await fetchRole(
     guild,
@@ -77,6 +81,18 @@ export async function setupGuild(guild: Guild) {
     });
   }
 
+  let interviewRole = await fetchRole(
+    guild,
+    config.interviewRoleId ?? saved?.interviewRoleId,
+  );
+  if (!interviewRole) {
+    interviewRole = await guild.roles.create({
+      name: 'รอสัมภาษณ์',
+      color: 0x3498db,
+      reason: 'KAINAN HIGH registration setup',
+    });
+  }
+
   const registrationPermissions: OverwriteResolvable[] = [
     {
       id: everyone.id,
@@ -85,6 +101,10 @@ export async function setupGuild(guild: Guild) {
         PermissionFlagsBits.ReadMessageHistory,
       ],
       deny: [PermissionFlagsBits.SendMessages],
+    },
+    {
+      id: memberRole.id,
+      deny: [PermissionFlagsBits.ViewChannel],
     },
     {
       id: botMember.id,
@@ -106,37 +126,53 @@ export async function setupGuild(guild: Guild) {
     },
   );
 
+  const interviewPermissions: OverwriteResolvable[] = [
+    {
+      id: everyone.id,
+      deny: [PermissionFlagsBits.ViewChannel],
+    },
+    {
+      id: interviewRole.id,
+      allow: [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ReadMessageHistory,
+      ],
+    },
+    {
+      id: memberRole.id,
+      deny: [PermissionFlagsBits.ViewChannel],
+    },
+    {
+      id: botMember.id,
+      allow: [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ReadMessageHistory,
+      ],
+    },
+  ];
+  if (adminRole) {
+    interviewPermissions.push({
+      id: adminRole.id,
+      allow: [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.ReadMessageHistory,
+      ],
+    });
+  }
+
   const interviewChannel = await getOrCreateTextChannel(
     guild,
     config.interviewChannelId ?? saved?.interviewChannelId,
     {
       name: '🔊รอสัมภาษณ์',
       topic: 'รอทีมงานเรียกสัมภาษณ์',
-      permissionOverwrites: [
-        {
-          id: everyone.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.SendMessages,
-            PermissionFlagsBits.ReadMessageHistory,
-          ],
-        },
-        {
-          id: botMember.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.SendMessages,
-            PermissionFlagsBits.ReadMessageHistory,
-          ],
-        },
-      ],
+      permissionOverwrites: interviewPermissions,
     },
   );
 
-  const adminRole = await fetchRole(
-    guild,
-    config.adminRoleId ?? saved?.adminRoleId,
-  );
   const adminPermissions: OverwriteResolvable[] = [
     {
       id: everyone.id,
@@ -191,6 +227,7 @@ export async function setupGuild(guild: Guild) {
     registrationChannelId: registrationChannel.id,
     adminChannelId: adminChannel.id,
     interviewChannelId: interviewChannel.id,
+    interviewRoleId: interviewRole.id,
     memberRoleId: memberRole.id,
     adminRoleId: adminRole?.id ?? null,
     welcomeMessageId: welcomeMessage.id,

@@ -103,6 +103,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           `ลงทะเบียน: <#${settings.registrationChannelId}>`,
           `แอดมิน: <#${settings.adminChannelId}>`,
           `รอสัมภาษณ์: <#${settings.interviewChannelId}>`,
+          `Role รอสัมภาษณ์: <@&${settings.interviewRoleId}>`,
           `Role สมาชิก: <@&${settings.memberRoleId}>`,
         ].join('\n'),
       );

@@ -51,6 +51,7 @@ export const config = Object.freeze({
   registrationChannelId: optionalSnowflake('REGISTRATION_CHANNEL_ID'),
   adminChannelId: optionalSnowflake('ADMIN_CHANNEL_ID'),
   interviewChannelId: optionalSnowflake('INTERVIEW_CHANNEL_ID'),
+  interviewRoleId: optionalSnowflake('INTERVIEW_ROLE_ID'),
   memberRoleId: optionalSnowflake('MEMBER_ROLE_ID'),
   adminRoleId: optionalSnowflake('ADMIN_ROLE_ID'),
 });

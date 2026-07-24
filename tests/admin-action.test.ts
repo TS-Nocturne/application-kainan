@@ -12,6 +12,15 @@ test('parses valid admin component IDs', () => {
       registrationId: '550e8400-e29b-41d4-a716-446655440000',
     },
   );
+  assert.deepEqual(
+    parseAdminAction(
+      'registration:skip:550e8400-e29b-41d4-a716-446655440000',
+    ),
+    {
+      action: 'skip',
+      registrationId: '550e8400-e29b-41d4-a716-446655440000',
+    },
+  );
 });
 
 test('rejects malformed component IDs', () => {

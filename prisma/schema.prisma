@@ -20,6 +20,7 @@ model GuildSettings {
   registrationChannelId String   @map("registration_channel_id")
   adminChannelId        String   @map("admin_channel_id")
   interviewChannelId    String   @map("interview_channel_id")
+  interviewRoleId       String?  @map("interview_role_id")
   memberRoleId          String   @map("member_role_id")
   adminRoleId           String?  @map("admin_role_id")
   welcomeMessageId      String?  @map("welcome_message_id")
